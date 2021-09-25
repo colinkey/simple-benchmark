@@ -1,0 +1,13 @@
+name: simple-benchmark
+version: 0.1.0
+
+authors:
+  - Colin Key <colin.m.key@gmail.com>
+
+targets:
+  simple-benchmark:
+    main: src/simple-benchmark.cr
+
+crystal: 1.0.0
+
+license: MIT
