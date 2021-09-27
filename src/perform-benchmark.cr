@@ -6,6 +6,7 @@ class PerformBenchmark
   def initialize(url : String, iterations = 50)
     @url = url
     @iterations = iterations
+    @expected_receipts = 0
   end
 
   def perform
@@ -17,11 +18,38 @@ class PerformBenchmark
       delete
     end
 
-    # METHODS.each do |verb|
-    #   @iterations.times do
-    #     verb
-    #   end
-    # end
+    print_results
+  end
+
+  def call_with_receipt(&block)
+    spawn do
+      block.call
+    end
+    @expected_receipts += 1
+  end
+
+  def perform_concurrent
+    chan = Channel(Int32).new(10)
+    @iterations.times do
+      call_with_receipt do
+        chan.send(get)
+      end
+      call_with_receipt do
+        chan.send(patch)
+      end
+      call_with_receipt do
+        chan.send(post)
+      end
+      call_with_receipt do
+        chan.send(put)
+      end
+      call_with_receipt do
+        chan.send(delete)
+      end
+    end
+    @expected_receipts.times do
+      chan.receive
+    end
 
     print_results
   end

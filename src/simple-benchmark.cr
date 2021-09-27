@@ -1,4 +1,5 @@
 require "./perform-benchmark"
 
-benchmarker = PerformBenchmark.new("http://localhost:3000")
-benchmarker.perform
+benchmarker = PerformBenchmark.new("http://127.0.0.1:3000", 200)
+benchmarker.perform_concurrent
+

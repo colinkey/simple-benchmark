@@ -3,7 +3,8 @@ const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  res.send('gottem')
+  setTimeout(() => res.send('gottem'), 100)
+  // res.send('gottem')
 })
 
 app.post('/', (req, res) => {
