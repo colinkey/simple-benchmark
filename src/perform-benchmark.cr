@@ -1,15 +1,23 @@
 require "http/client"
+require "./cli-options"
 
 METHODS = ["get", "post", "patch", "put", "delete"]
 
 class PerformBenchmark
-  def initialize(url : String, iterations = 50)
-    @url = url
-    @iterations = iterations
+  @url : String
+  @iterations : Int32
+  @concurrent : Bool
+
+  def initialize(options : CliOptions)
+    @url = options.url
+    @iterations = options.iterations
+    @concurrent = options.concurrent
+
     @expected_receipts = 0
+    @total_time = 0.0
   end
 
-  def perform
+  def call
     @iterations.times do
       get
       post
@@ -17,7 +25,17 @@ class PerformBenchmark
       put
       delete
     end
+  end
 
+  def perform
+    t1 = Time.utc
+    if @concurrent
+      call_concurrently
+    else
+      call
+    end
+    t2 = Time.utc
+    @total_time = (t2 - t1).total_milliseconds
     print_results
   end
 
@@ -28,7 +46,7 @@ class PerformBenchmark
     @expected_receipts += 1
   end
 
-  def perform_concurrent
+  def call_concurrently
     chan = Channel(Int32).new(10)
     @iterations.times do
       call_with_receipt do
@@ -50,8 +68,6 @@ class PerformBenchmark
     @expected_receipts.times do
       chan.receive
     end
-
-    print_results
   end
 
   macro create_response_handlers
@@ -95,6 +111,7 @@ class PerformBenchmark
       {% for name in METHODS %}
         print_{{ name.id }}_results
       {% end %}
+      puts "Time spent running: #{@total_time}ms"
     end
   end
 
